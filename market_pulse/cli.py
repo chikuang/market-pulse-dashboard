@@ -1,6 +1,7 @@
 import argparse
 from .data import load_data, refresh
 from .report import analyze, write_reports
+from .macro import load_macro
 
 
 def main():
@@ -15,7 +16,7 @@ def main():
         parser.error("--as-of applies only to refresh; cached data is never silently truncated")
     try:
         frames, manifest = refresh(args.data_dir, args.start, args.as_of) if args.command == "refresh" else load_data(args.data_dir)
-        write_reports(analyze(frames, manifest), args.output_dir)
+        write_reports(analyze(frames, manifest, load_macro(args.data_dir, manifest)), args.output_dir)
     except (OSError, ValueError, RuntimeError, KeyError) as exc:
         parser.exit(1, f"Market Pulse failed: {exc}\nNo synthetic market data was substituted.\n")
 

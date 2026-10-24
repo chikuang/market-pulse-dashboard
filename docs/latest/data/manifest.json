@@ -1,6 +1,6 @@
 {
   "provider": "Yahoo Finance chart endpoint (unofficial)",
-  "fetched_at_utc": "2026-10-24T18:15:49.312081+00:00",
+  "fetched_at_utc": "2026-10-24T19:04:52.517247+00:00",
   "requested_as_of": null,
   "price_basis": "Unadjusted price indices; excludes dividends and FX conversion",
   "markets": {
@@ -17,8 +17,8 @@
       "rows": 2713,
       "first_date": "2016-01-04",
       "last_date": "2026-10-23",
-      "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPTSE?period1=1451606400&period2=1792865749&interval=1d&events=history",
-      "cutoff_utc": "2026-10-24T18:15:49.312081+00:00",
+      "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPTSE?period1=1451606400&period2=1792868692&interval=1d&events=history",
+      "cutoff_utc": "2026-10-24T19:04:52.517247+00:00",
       "missing_ohlc_rows_dropped": 0
     },
     "US": {
@@ -34,8 +34,8 @@
       "rows": 2718,
       "first_date": "2016-01-04",
       "last_date": "2026-10-23",
-      "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?period1=1451606400&period2=1792865749&interval=1d&events=history",
-      "cutoff_utc": "2026-10-24T18:15:49.312081+00:00",
+      "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?period1=1451606400&period2=1792868692&interval=1d&events=history",
+      "cutoff_utc": "2026-10-24T19:04:52.517247+00:00",
       "missing_ohlc_rows_dropped": 0
     },
     "TW": {
@@ -51,8 +51,8 @@
       "rows": 2623,
       "first_date": "2016-01-04",
       "last_date": "2026-10-22",
-      "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/%5ETWII?period1=1451606400&period2=1792865749&interval=1d&events=history",
-      "cutoff_utc": "2026-10-24T18:15:49.312081+00:00",
+      "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/%5ETWII?period1=1451606400&period2=1792868692&interval=1d&events=history",
+      "cutoff_utc": "2026-10-24T19:04:52.517247+00:00",
       "missing_ohlc_rows_dropped": 8
     },
     "NASDAQ": {
@@ -68,9 +68,81 @@
       "rows": 2718,
       "first_date": "2016-01-04",
       "last_date": "2026-10-23",
-      "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/%5EIXIC?period1=1451606400&period2=1792865749&interval=1d&events=history",
-      "cutoff_utc": "2026-10-24T18:15:49.312081+00:00",
+      "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/%5EIXIC?period1=1451606400&period2=1792868692&interval=1d&events=history",
+      "cutoff_utc": "2026-10-24T19:04:52.517247+00:00",
       "missing_ohlc_rows_dropped": 0
+    }
+  },
+  "macro": {
+    "policy": {
+      "availability": "Observation date + 2 calendar days, 00:00 UTC (assumption, not observed release timestamps)",
+      "lag_calendar_days": 2,
+      "maximum_observation_age_days": 10,
+      "vintage": "Latest retrieved vintage; revisions are not point-in-time reconstructed. Not an ALFRED vintage backtest.",
+      "alignment": "Backward as-of at each exchange local close; no backfill, interpolation, or future values"
+    },
+    "sources": {
+      "rates_seed": {
+        "source_url": "https://raw.githubusercontent.com/Leo-CZ/fed-rates-dashboard/def6a4d5a9a75e1a123476750a80b9aa5c8576da/data/fred/rates_daily.csv",
+        "repository_commit": "def6a4d5a9a75e1a123476750a80b9aa5c8576da",
+        "original_sha256": "b57489f7134dc857c045a331ec24ca4081327d467bc8a2818f3e1d60c92d013c",
+        "units": "percent per year",
+        "file": "macro-rates_seed.csv",
+        "sha256": "0b8bb40f8032729e8be9c2386533ea22187f536beb2ae9f4d3cdd433e23135b3",
+        "rows": 2000,
+        "first_date": "2019-01-02",
+        "last_date": "2026-08-31"
+      },
+      "rates": {
+        "source_urls": [
+          "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2016-01-01&coed=2026-10-23",
+          "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2016-01-01&coed=2026-10-23",
+          "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS30&cosd=2016-01-01&coed=2026-10-23",
+          "https://fred.stlouisfed.org/graph/fredgraph.csv?id=T10YIE&cosd=2016-01-01&coed=2026-10-23",
+          "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFII10&cosd=2016-01-01&coed=2026-10-23",
+          "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFII30&cosd=2016-01-01&coed=2026-10-23"
+        ],
+        "seed_commit": "def6a4d5a9a75e1a123476750a80b9aa5c8576da",
+        "overlap_revisions": 0,
+        "seed_only_values": 0,
+        "units": "percent per year; differences in percentage points",
+        "file": "macro-rates.csv",
+        "sha256": "f672a88f332a59d62093abdf0851d4e036db36a1bcdfba04acf5ea599e0e04df",
+        "rows": 2820,
+        "first_date": "2016-01-04",
+        "last_date": "2026-10-22"
+      },
+      "vix": {
+        "source_url": "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv",
+        "units": "VIX index points (30-day implied volatility, annualized %)",
+        "file": "macro-vix.csv",
+        "sha256": "1f5b415b26c6d2ae8f94215c9dc9c7daa65bf25c5503135a6b23ce0dc5e25930",
+        "rows": 2751,
+        "first_date": "2016-01-04",
+        "last_date": "2026-10-23"
+      },
+      "usdcad": {
+        "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/CAD%3DX?period1=1451606400&period2=1792800000&interval=1d",
+        "symbol": "CAD=X",
+        "missing_close_rows_dropped": 8,
+        "units": "CAD per 1 USD; positive return = USD appreciation",
+        "file": "macro-usdcad.csv",
+        "sha256": "5ecde4658e6b992ce74829d1d9e1a7ec649fb440f8172bc83802c32006ab5339",
+        "rows": 2813,
+        "first_date": "2016-01-01",
+        "last_date": "2026-10-22"
+      },
+      "usdtwd": {
+        "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/TWD%3DX?period1=1451606400&period2=1792800000&interval=1d",
+        "symbol": "TWD=X",
+        "missing_close_rows_dropped": 8,
+        "units": "TWD per 1 USD; positive return = USD appreciation",
+        "file": "macro-usdtwd.csv",
+        "sha256": "02cd087d6f2d966b4f6a22afe02854c65be3097319e5003c2d771208a63fd430",
+        "rows": 2814,
+        "first_date": "2016-01-01",
+        "last_date": "2026-10-23"
+      }
     }
   }
 }

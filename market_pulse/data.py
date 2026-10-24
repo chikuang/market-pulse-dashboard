@@ -95,6 +95,8 @@ def refresh(directory, start="2016-01-01", as_of=None):
         frames[code] = frame
         entries[code] = {**spec, "file": filename, "sha256": digest, "rows": len(frame), "first_date": str(frame.index[0].date()), "last_date": str(frame.index[-1].date()), "source_url": url, "cutoff_utc": cutoff.isoformat(), "missing_ohlc_rows_dropped": frame.attrs["missing_ohlc_rows_dropped"]}
     manifest = {"provider": "Yahoo Finance chart endpoint (unofficial)", "fetched_at_utc": now.isoformat(), "requested_as_of": as_of, "price_basis": "Unadjusted price indices; excludes dividends and FX conversion", "markets": entries}
+    from .macro import refresh_macro
+    manifest["macro"] = refresh_macro(directory, start, now, as_of)
     temp = directory / "manifest.tmp"
     temp.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     temp.replace(directory / "manifest.json")
