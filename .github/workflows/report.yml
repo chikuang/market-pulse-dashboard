@@ -1,0 +1,22 @@
+name: Build market report
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install .
+      - run: python -m market_pulse.cli refresh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: market-pulse-report
+          path: |
+            reports/
+            data/
+          retention-days: 14

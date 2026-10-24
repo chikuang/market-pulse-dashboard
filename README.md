@@ -1,2 +1,105 @@
-# market-pulse-dashboard
-Canada, US and Taiwan market analytics with KD, PCA and walk-forward forecasts.
+# Market Pulse Dashboard
+
+以 **加拿大、美國、台灣大盤**為核心的 Python 研究 repo。下載真實日線，計算技術指標、主成分分析（PCA），以按時間推進的回測檢驗 5／20 個交易日預測，產生可離線開啟的繁體中文互動報告。
+
+## 快速開始
+
+需要 Python 3.11+。在 repo 根目錄執行：
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[dev]'
+python -m market_pulse.cli refresh
+```
+
+Windows 使用 `.venv\Scripts\activate`。完成後直接以瀏覽器開啟 `reports/index.html`；Plotly 與資料皆內嵌，不依賴 CDN。也會輸出 `reports/analysis.md` 和 `reports/analysis.json`。
+
+```bash
+# 使用 SHA-256 驗證過的本地資料重建，不連線
+python -m market_pulse.cli build
+# 歷史截止日（按各市場當地日期，含該日；仍排除執行當天）
+python -m market_pulse.cli refresh --start 2016-01-01 --as-of 2026-10-23
+# 測試不需下載行情
+python -m pytest -q
+```
+
+首次離線儀表板：下載 [market-dashboard-2026-10-24.html](docs/market-dashboard-2026-10-24.html) 後用瀏覽器開啟（GitHub 檔案頁不執行 HTML）。[資料來源紀錄](docs/data-manifest-2026-10-24.json) 保存首次分析使用的日期與雜湊。
+
+完整模型需約五年以上的資料；預設由 2016 年起下載。市場資料若不足，會明確報錯。`--data-dir` 與 `--output-dir` 可更改輸出位置。
+
+## 市場與功能
+
+| 市場 | 指數 | Yahoo 代號 | 定位 |
+|---|---|---|---|
+| 加拿大 | S&P/TSX Composite | `^GSPTSE` | 加拿大核心大盤 |
+| 美國 | S&P 500 | `^GSPC` | 美國大型股大盤 |
+| 台灣 | TAIEX 加權指數 | `^TWII` | 台灣上市大盤 |
+| 美國 | Nasdaq Composite | `^IXIC` | 比較序列，不重複納入三地 PCA |
+
+- 日 K 線、20／60／200 日均線、20 日布林通道、同起點 100 的跨市場比較。
+- 台灣遞迴式 KD(9,3,3)、J、RSI(14)、MACD(12,26,9)、ATR(14)、20 日年化波動、下載期間回撤。J 和成交量保留於 JSON；指數成交量不作模型特徵。
+- 三地報酬相關矩陣、PCA 解釋變異、特徵向量權重、相關負荷與 scores。
+- 5／20 個當地有效日線後的報酬／指數點預測、80% 經驗誤差帶、時間外回測。
+- 6 個月／1／3／5 年視窗、市場切換、縮放、圖例切換與 JSON 匯出。
+- [首次實際分析](docs/analysis-2026-10-24.md)，資料截止日依各市場標示。
+
+「主成分」在本 repo 指統計 PCA；**未取得即時成分股／產業權重**，不能將 PCA 權重當作台積電或金融、能源類股對指數的貢獻。
+
+## 指標定義
+
+- `RSV = 100 × (close - low_9) / (high_9 - low_9)`。
+- `K_t = 2/3 K_(t-1) + 1/3 RSV_t`，`D_t = 2/3 D_(t-1) + 1/3 K_t`。前 8 日為 NA，先前 K=D=50；9 日價格區間完全平坦時保留前 K、D。`J=3K-2D`。
+- 此 KD 為台灣常用遞迴平滑，與一些平台的 SMA 型 slow stochastic 不同。K>80／<20 分別代表近期收盤接近區間高／低檔，不能單獨視為轉折。
+- RSI 與 ATR 使用 Wilder 平滑，以首個完整期間的均值初始化；持續上漲 RSI=100、持續下跌=0、完全平盤=50。
+- MACD 是 EMA12−EMA26，訊號線 EMA9；柱狀值是 MACD−訊號線（未乘二）。布林標準差採 `ddof=0`。
+- 年化波動為 20 日對數報酬的樣本標準差 × √252；回撤以下載資料期間最高收盤價計算。
+
+## PCA 與預測方法
+
+**描述性 PCA**：各市場先算日 log 報酬，再取共同日期，使用最近最多 756 筆共同日期。StandardScaler 將三地報酬等尺度化，再做 PCA。符號以該 PC 絕對值最大係數為正作固定方向，符號本身無經濟意義。同日台灣先於北美收盤，且假日使報酬涵蓋期間不一致，這不是同步因果分析。
+
+**預測用 PCA**：每個市場獨立，以自身當時已知的報酬、均線乖離、KD、RSI、MACD、布林位置、波動率、ATR、回撤共 15 項特徵建立 `StandardScaler → PCA(90% variance) → Ridge(alpha=10)`。目標是 `log(close[t+h]/close[t])`。跨市場 PCA、新聞與總經數據不輸入模型，避免同日北美資訊滲入台股預測。
+
+**防止資料洩漏**：至少 504 個成熟訓練樣本；擴張訓練窗，約最近 504 個交易日做測試。每隔 h 日預測 h 日，因此測試報酬期間不重疊。每次重新擬合 scaler、PCA、模型；訓練標籤結束日期必須嚴格早於測試起點。模型設定固定，未用測試資料選參數。
+
+**驗證指標**：簡單報酬的 MAE、RMSE、方向準確率，與 0% 報酬、訓練集平均 log 報酬、永遠看漲基準比較。MAE 略低不代表統計顯著，也不是扣除交易成本的策略報酬。
+
+**區間**：最後點預測加上樣本外 log 報酬殘差的第 10／90 分位數，再轉回簡單報酬，作為 80% 經驗誤差帶。它是歷史殘差校準，不保證未來涵蓋率。另報告僅使用前 20 筆以上已知誤差所估區間的 prequential 覆蓋率。20 日期限僅約 26 次測試、6 次覆蓋率評估，推論能力有限。
+
+## 資料管理
+
+來源為 Yahoo Finance 公開但非官方 chart endpoint；無需 API key，可能限流或變更。索引幣別分別為 CAD／USD／TWD，但指數本身以點數顯示。這些是**價格指數，不含股息、換匯、費用**。
+
+只使用當地日曆日期早於執行當天的 OHLC 日線，寧可延後納入，避免混入盤中資料。各市場不補假日、不插值。OHLC 任一缺漏的資料列會移除並記錄數量；有效日線計數可能因資料缺漏而跨過多於預期的實際交易日。提供者的重複日期、無效價格／區間會報錯。距報告產生日超過 4 日曆日顯示過期提醒（不是正式交易日曆判斷）。
+
+`data/manifest.json` 記錄下載時間、來源 URL、各地截止時間、首末日、筆數、移除的 OHLC 缺列、CSV SHA-256。CSV 以內容雜湊命名；所有市場成功後才原子更新 manifest，避免失敗下載破壞舊快取。`build` 驗證雜湊。資料／大型產物預設不進 Git；本機首次產物已提供。Yahoo 的使用與再散布規則另行適用，請依需求確認資料授權。
+
+## GitHub Actions
+
+- **Test analysis**：push／PR 執行測試，Python 3.11 與 3.13。
+- **Build market report**：Actions → Run workflow 手動下載並產生報告，從 run 的 artifact 下載 ZIP；保留 14 天。未設定自動排程。
+
+## 專案結構
+
+```text
+market_pulse/
+  config.py        市場與特徵
+  data.py          下載、品質檢查、快取
+  indicators.py    技術指標
+  models.py        PCA、無洩漏回測
+  report.py        JSON／Markdown／離線 HTML 報告
+  dashboard.html   互動報告模板
+  cli.py           命令列
+ tests/            指標、時間切分、未來資料與資料品質測試
+ docs/             首次實際分析與方法來源
+```
+
+## 參考
+
+- [原始功能參考：fed-rates-dashboard](https://github.com/Leo-CZ/fed-rates-dashboard)。本 repo 另行實作，沒有複製原 repo 程式碼。
+- [S&P/TSX Composite](https://www.spglobal.com/spdji/en/indices/equity/sp-tsx-composite-index/)、[TWSE 指數系列](https://www.twse.com.tw/zh/indices/indices/series.html)。
+- [scikit-learn PCA](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html)、[時序切分](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html)。本 repo 自行實作逐期成熟標籤切分。
+- [Fidelity 隨機指標概念](https://www.fidelity.com/learning-center/trading-investing/technical-analysis/technical-indicator-guide/fast-stochastic)；本 repo 的 KD 遞迴公式以本文件定義為準。
+
+研究用途，不構成個人化投資建議。資料、模型與歷史關係都可能失效。
