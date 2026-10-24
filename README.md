@@ -2,6 +2,8 @@
 
 以 **加拿大、美國、台灣大盤**為核心的 Python 研究 repo。下載真實日線，計算技術指標、主成分分析（PCA），以按時間推進的回測檢驗 5／20 個交易日預測，產生可離線開啟的繁體中文互動報告。
 
+[線上儀表板](https://chikuang.github.io/market-pulse-dashboard/) · [最新分析](docs/latest/analysis.md) · [每日更新紀錄](https://github.com/chikuang/market-pulse-dashboard/actions/workflows/report.yml)
+
 ## 快速開始
 
 需要 Python 3.11+。在 repo 根目錄執行：
@@ -73,12 +75,27 @@ python -m pytest -q
 
 只使用當地日曆日期早於執行當天的 OHLC 日線，寧可延後納入，避免混入盤中資料。各市場不補假日、不插值。OHLC 任一缺漏的資料列會移除並記錄數量；有效日線計數可能因資料缺漏而跨過多於預期的實際交易日。提供者的重複日期、無效價格／區間會報錯。距報告產生日超過 4 日曆日顯示過期提醒（不是正式交易日曆判斷）。
 
-`data/manifest.json` 記錄下載時間、來源 URL、各地截止時間、首末日、筆數、移除的 OHLC 缺列、CSV SHA-256。CSV 以內容雜湊命名；所有市場成功後才原子更新 manifest，避免失敗下載破壞舊快取。`build` 驗證雜湊。資料／大型產物預設不進 Git；本機首次產物已提供。Yahoo 的使用與再散布規則另行適用，請依需求確認資料授權。
+`data/manifest.json` 記錄下載時間、來源 URL、各地截止時間、首末日、筆數、移除的 OHLC 缺列、CSV SHA-256。CSV 以內容雜湊命名；所有市場成功後才原子更新 manifest，避免失敗下載破壞舊快取。`build` 驗證雜湊。本機 `data/`、`reports/` 不進 Git；每日成功發布的最新 OHLCV、manifest、JSON、Markdown 與離線 HTML 保存在 `docs/latest/`，歷史版本由 Git 留存。Yahoo 的使用與再散布規則另行適用，請依需求確認資料授權。
 
 ## GitHub Actions
 
 - **Test analysis**：push／PR 執行測試，Python 3.11 與 3.13。
-- **Build market report**：Actions → Run workflow 手動下載並產生報告，從 run 的 artifact 下載 ZIP；保留 14 天。未設定自動排程。
+- **Update market dashboard**：每天美東時間 **00:17**（`America/New_York`，自動處理夏令時間）執行；也可在 Actions → Run workflow 手動更新。主要程式／workflow 變更時會重建。
+- 每次下載加拿大、美國、台灣與 Nasdaq 的完整歷史日線，重算所有指標、PCA、5／20 日預測與回測，驗證後提交到 `main` 的 `docs/latest/`，並部署到 [GitHub Pages](https://chikuang.github.io/market-pulse-dashboard/)。使用 Actions 內建 token，無需個人 token 或 API key。
+- 最新報告：`docs/latest/index.html`、`analysis.md`、`analysis.json`；可重現資料：`docs/latest/data/{CA,US,TW,NASDAQ}.csv` 和 `manifest.json`。每次 run 另保存 30 天的完整下載 artifact。
+- 排程換算：台北時間夏令期 12:17、冬令期 13:17。使用各市場當地日期早於執行日的完整日線；周末、休市日仍檢查，市場資料日期可能不變。各指數自己的截止日會顯示在儀表板。
+- 先通過測試及所有市場的資料／報告一致性驗證，才寫入最新版本；下載失敗、雜湊不符、缺少預測或資料日期倒退會讓 workflow 失敗，保留上一份成功的遠端儀表板。發布期間若 main 被其他提交更新，停止並要求重新執行，避免把舊程式生成的報告覆蓋到新版本。
+- 同一時間只執行一個更新／部署；自動提交使用 `GITHUB_TOKEN`，不會遞迴觸發 workflow。GitHub 排程可能延遲，並非精準到分鐘的保證；執行紀錄及失敗原因見 Actions。
+- 電腦上的舊 `file://…/reports/index.html` 是靜態快照，不會被雲端排程同步；請使用線上儀表板網址查看每日更新。
+
+本機重建並準備相同的發布目錄：
+
+```bash
+python -m market_pulse.cli refresh
+python -m market_pulse.publish
+```
+
+工作流程依據：[GitHub 排程與時區](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)、[GitHub Pages 自訂 workflow](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)。
 
 ## 專案結構
 
@@ -91,6 +108,7 @@ market_pulse/
   report.py        JSON／Markdown／離線 HTML 報告
   dashboard.html   互動報告模板
   cli.py           命令列
+  publish.py       發布前一致性與日期驗證
  tests/            指標、時間切分、未來資料與資料品質測試
  docs/             首次實際分析與方法來源
 ```

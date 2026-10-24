@@ -1,22 +1,90 @@
-name: Build market report
+name: Update market dashboard
 on:
+  schedule:
+    - cron: '17 0 * * *'
+      timezone: America/New_York
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/report.yml'
+      - 'market_pulse/**'
+      - 'pyproject.toml'
+      - 'requirements.txt'
+
+# Serialize refreshes and deployments so an older run cannot overwrite a newer one.
+concurrency:
+  group: market-dashboard-publication
+  cancel-in-progress: false
 permissions:
   contents: read
+
 jobs:
   report:
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    env:
+      DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.repository.default_branch }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-      - run: python -m pip install .
-      - run: python -m market_pulse.cli refresh
-      - uses: actions/upload-artifact@v4
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install and test
+        run: |
+          python -m pip install '.[dev]'
+          python -m pytest -q
+      - name: Download all markets and rebuild indicators, PCA and forecasts
+        run: python -m market_pulse.cli refresh
+      - name: Validate and prepare the latest dashboard
+        run: python -m market_pulse.publish
+      - name: Commit latest data and dashboard
+        run: |
+          # Never rebase an old model's report over a newer code revision.
+          git fetch origin "$DEFAULT_BRANCH"
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse "origin/$DEFAULT_BRANCH")" ]; then
+            echo '::error::The default branch changed during the refresh. Re-run this workflow.'
+            exit 1
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- docs/latest
+          if ! git diff --cached --quiet; then
+            git commit -m "Refresh market data and dashboard $(date -u +%F)"
+            git push origin "HEAD:$DEFAULT_BRANCH"
+          fi
+      - name: Keep a downloadable report and data snapshot
+        uses: actions/upload-artifact@v4
         with:
           name: market-pulse-report
-          path: |
-            reports/
-            data/
-          retention-days: 14
+          path: docs/latest/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Prepare Pages deployment
+        uses: actions/configure-pages@v5
+      - name: Upload dashboard for GitHub Pages
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs/latest/
+
+  deploy:
+    needs: report
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish the dashboard
+        id: deployment
+        uses: actions/deploy-pages@v4
