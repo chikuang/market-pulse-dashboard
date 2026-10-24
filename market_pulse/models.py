@@ -6,6 +6,7 @@ from sklearn.linear_model import Ridge
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from .config import FEATURES, PRIMARY
+from .evaluation import evaluation_start, validate_span
 
 
 def pipeline():
@@ -20,7 +21,7 @@ def training_positions(origin, horizon, minimum=504):
     return np.arange(end)
 
 
-def forecast(frame, horizon=5, min_train=504, test_window=504):
+def forecast(frame, horizon=5, min_train=504, test_window=504, backtest_start=None, minimum_years=0):
     complete = frame[FEATURES].notna().all(axis=1)
     first = np.flatnonzero(complete.to_numpy())
     if not len(first):
@@ -32,7 +33,7 @@ def forecast(frame, horizon=5, min_train=504, test_window=504):
     x = sample[FEATURES]
     y = np.log(sample.close.shift(-horizon) / sample.close)
     last = len(sample) - 1
-    start = max(min_train + horizon, len(sample) - test_window - horizon)
+    start = evaluation_start(sample.index, horizon, min_train, test_window, backtest_start)
     rows, errors, coverage = [], [], []
     for origin in range(start, len(sample) - horizon, horizon):
         train = training_positions(origin, horizon, min_train)
@@ -46,9 +47,10 @@ def forecast(frame, horizon=5, min_train=504, test_window=504):
         errors.append(actual - pred)
     if len(rows) < 20:
         raise ValueError("At least 20 non-overlapping out-of-sample forecasts are required")
+    coverage_years = validate_span(rows, minimum_years)
     records = pd.DataFrame(rows)
     pred_r, actual_r, mean_r = [np.expm1(records[c].to_numpy()) for c in ["predicted_log", "actual_log", "mean_baseline_log"]]
-    metrics = {"n": len(rows), "mae": float(np.mean(abs(pred_r - actual_r))), "zero_mae": float(np.mean(abs(actual_r))), "mean_mae": float(np.mean(abs(mean_r - actual_r))), "rmse": float(np.sqrt(np.mean((pred_r - actual_r)**2))), "direction_accuracy": float(np.mean((pred_r > 0) == (actual_r > 0))), "always_up_accuracy": float(np.mean(actual_r > 0)), "prequential_coverage": float(np.mean(coverage)) if coverage else None, "coverage_n": len(coverage), "test_start": rows[0]["date"], "test_end": rows[-1]["target_date"]}
+    metrics = {"n": len(rows), "coverage_years": coverage_years, "requested_start": backtest_start, "mae": float(np.mean(abs(pred_r - actual_r))), "zero_mae": float(np.mean(abs(actual_r))), "mean_mae": float(np.mean(abs(mean_r - actual_r))), "rmse": float(np.sqrt(np.mean((pred_r - actual_r)**2))), "direction_accuracy": float(np.mean((pred_r > 0) == (actual_r > 0))), "always_up_accuracy": float(np.mean(actual_r > 0)), "prequential_coverage": float(np.mean(coverage)) if coverage else None, "coverage_n": len(coverage), "test_start": rows[0]["date"], "test_end": rows[-1]["target_date"]}
     train = training_positions(last, horizon, min_train)
     model = pipeline().fit(x.iloc[train], y.iloc[train])
     pred = float(model.predict(x.iloc[[last]])[0])

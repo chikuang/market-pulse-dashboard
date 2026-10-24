@@ -41,7 +41,7 @@ jobs:
         run: |
           python -m pip install '.[dev]'
           python -m pytest -q
-      - name: Download markets, rates, VIX and FX; rebuild forecasts and matched backtests
+      - name: Download markets, rates, VIX and FX; rebuild 2020-onward forecasts, regimes and eight matched combinations
         run: python -m market_pulse.cli refresh
       - name: Validate and prepare the latest dashboard
         run: python -m market_pulse.publish

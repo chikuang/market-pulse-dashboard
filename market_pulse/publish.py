@@ -11,6 +11,7 @@ from .config import MARKETS
 from .data import load_data
 from .macro import load_macro
 from .comparison import VARIANTS
+from .evaluation import BACKTEST_START, MIN_BACKTEST_YEARS, validate_span
 from .report import write_reports
 
 
@@ -53,13 +54,26 @@ def prepare_publication(data_dir="data", report_dir="reports", destination="docs
                     raise ValueError(f"Incomplete matched comparison: {code}")
                 if len(comparison["records"]) != comparison["n"]:
                     raise ValueError(f"Incorrect comparison sample count: {code}")
+                validate_span(comparison['records'], MIN_BACKTEST_YEARS)
+                if comparison.get('requested_start') != BACKTEST_START:
+                    raise ValueError(f"Incorrect long backtest anchor: {code}")
+                slices = comparison.get('slices', {})
+                if set(slices) != {'bull', 'bear', 'high_volatility', 'normal_volatility', 'early', 'recent'}:
+                    raise ValueError(f"Missing regime analysis: {code}")
+                if any(slices[a]['n'] + slices[b]['n'] != comparison['n'] for a,b in [('bull','bear'),('high_volatility','normal_volatility'),('early','recent')]):
+                    raise ValueError(f"Invalid regime partition: {code}")
+                for a,b in zip(comparison['records'], comparison['records'][1:]):
+                    if a['target_date'] > b['date']:
+                        raise ValueError(f"Overlapping evaluation targets: {code}")
                 for record in comparison["records"]:
                     if not record["last_train_label_date"] < record["date"] < record["target_date"] or set(record["predicted_log"]) != set(VARIANTS):
                         raise ValueError(f"Invalid comparison timing or variants: {code}")
-                for variant in comparison["variants"].values():
+                for key, variant in comparison["variants"].items():
                     f = variant["forecast"]
                     if f["origin"] != latest or f["last_train_label_date"] >= latest:
                         raise ValueError(f"Invalid macro forecast timing: {code}")
+                    if key != 'technical' and 'stability' not in variant:
+                        raise ValueError(f"Missing stability assessment: {code}")
 
     # Stable CSV names prevent one file per refresh accumulating in the published tree.
     published = copy.deepcopy(manifest)
@@ -89,11 +103,12 @@ def prepare_publication(data_dir="data", report_dir="reports", destination="docs
     rows += [f"| {MARKETS[c]['name']} | {published['markets'][c]['last_date']} | {len(frames[c])} |" for c in MARKETS]
     rows += ["", "Updated OHLCV data, technical indicators, PCA, 5/20-session forecasts and backtests.", ""]
     if macros is not None:
-        rows += ["Rates / VIX / USD-CAD / USD-TWD refreshed. Matched technical, rates, VIX, FX and combined ablations:", "", "| Market | Horizon | Technical MAE | Combined MAE | Relative improvement |", "|---|---:|---:|---:|---:|"]
+        rows += ["Rates / VIX / USD-CAD / USD-TWD refreshed. Eight matched combinations since 2020; >=5 years required. Bull/bear/high-volatility and annual stability evaluated with Holm correction.", "", "| Market | Horizon | OOS n | Technical MAE | Combined MAE | Relative improvement | Stable candidates |", "|---|---:|---:|---:|---:|---:|---|"]
         for code in ("CA", "US", "TW"):
             for comparison in result["markets"][code]["macro_comparisons"]:
                 v = comparison["variants"]
-                rows.append(f"| {code} | {comparison['horizon']} | {v['technical']['metrics']['mae']:.3%} | {v['all']['metrics']['mae']:.3%} | {v['all']['improvement']['relative_mae_improvement']:+.1%} |")
+                stable = ', '.join(k for k in v if k != 'technical' and v[k]['stability']['passes']) or 'None'
+                rows.append(f"| {code} | {comparison['horizon']} | {comparison['n']} | {v['technical']['metrics']['mae']:.3%} | {v['all']['metrics']['mae']:.3%} | {v['all']['improvement']['relative_mae_improvement']:+.1%} | {stable} |")
     summary = "\n".join(rows)
     if os.environ.get("GITHUB_STEP_SUMMARY"):
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as stream:
