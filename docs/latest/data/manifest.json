@@ -1,6 +1,6 @@
 {
   "provider": "Yahoo Finance chart endpoint (unofficial)",
-  "fetched_at_utc": "2026-11-04T13:02:46.156944+00:00",
+  "fetched_at_utc": "2026-11-05T13:16:36.499730+00:00",
   "requested_as_of": null,
   "price_basis": "Unadjusted price indices; excludes dividends and FX conversion",
   "markets": {
@@ -13,12 +13,12 @@
       "close": "16:00",
       "color": "#53d3ad",
       "file": "CA.csv",
-      "sha256": "937c7d41f9b011cb2f3f4cf5fc7e275972da58d8b16a2a8ceb3dd66b1ab11d97",
-      "rows": 2720,
+      "sha256": "3751cf01985d47f73c08bf435f2658547bbc871af47583e04fca92c439cfc592",
+      "rows": 2721,
       "first_date": "2016-01-04",
-      "last_date": "2026-11-03",
-      "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPTSE?period1=1451606400&period2=1793797366&interval=1d&events=history",
-      "cutoff_utc": "2026-11-04T13:02:46.156944+00:00",
+      "last_date": "2026-11-04",
+      "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPTSE?period1=1451606400&period2=1793884596&interval=1d&events=history",
+      "cutoff_utc": "2026-11-05T13:16:36.499730+00:00",
       "missing_ohlc_rows_dropped": 0
     },
     "US": {
@@ -30,12 +30,12 @@
       "close": "16:00",
       "color": "#82aaff",
       "file": "US.csv",
-      "sha256": "6539c73e2aa7d498d85c5e38f2c4190ecff14c3d59b583c7eb70973c00e73f1a",
-      "rows": 2725,
+      "sha256": "1e991080506800e0acf801eee99d06a586809ce312633fc349ecbf37cc30533d",
+      "rows": 2726,
       "first_date": "2016-01-04",
-      "last_date": "2026-11-03",
-      "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?period1=1451606400&period2=1793797366&interval=1d&events=history",
-      "cutoff_utc": "2026-11-04T13:02:46.156944+00:00",
+      "last_date": "2026-11-04",
+      "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?period1=1451606400&period2=1793884596&interval=1d&events=history",
+      "cutoff_utc": "2026-11-05T13:16:36.499730+00:00",
       "missing_ohlc_rows_dropped": 0
     },
     "TW": {
@@ -47,12 +47,12 @@
       "close": "13:30",
       "color": "#ffb66e",
       "file": "TW.csv",
-      "sha256": "591a1b418c6ef36dc152a5e6faca1c759faea736c29cfc520528d25eff22dbb4",
-      "rows": 2629,
+      "sha256": "937957f203a4a0c2f2936375d1e709cc344ab2726a0e1016638b655031f87203",
+      "rows": 2630,
       "first_date": "2016-01-04",
-      "last_date": "2026-11-03",
-      "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/%5ETWII?period1=1451606400&period2=1793797366&interval=1d&events=history",
-      "cutoff_utc": "2026-11-04T13:02:46.156944+00:00",
+      "last_date": "2026-11-04",
+      "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/%5ETWII?period1=1451606400&period2=1793884596&interval=1d&events=history",
+      "cutoff_utc": "2026-11-05T13:16:36.499730+00:00",
       "missing_ohlc_rows_dropped": 8
     },
     "NASDAQ": {
@@ -64,12 +64,12 @@
       "close": "16:00",
       "color": "#bd9bff",
       "file": "NASDAQ.csv",
-      "sha256": "3853cf7f13651be0ba824638d9ba6e24e594896a9b71d70b837859b19b1e4dee",
-      "rows": 2725,
+      "sha256": "306b9e73759c5a650515a1d215f48ad681e0fb086fef7161e38c7a4358535c7c",
+      "rows": 2726,
       "first_date": "2016-01-04",
-      "last_date": "2026-11-03",
-      "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/%5EIXIC?period1=1451606400&period2=1793797366&interval=1d&events=history",
-      "cutoff_utc": "2026-11-04T13:02:46.156944+00:00",
+      "last_date": "2026-11-04",
+      "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/%5EIXIC?period1=1451606400&period2=1793884596&interval=1d&events=history",
+      "cutoff_utc": "2026-11-05T13:16:36.499730+00:00",
       "missing_ohlc_rows_dropped": 0
     }
   },
@@ -95,53 +95,53 @@
       },
       "rates": {
         "source_urls": [
-          "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2016-01-01&coed=2026-11-03",
-          "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2016-01-01&coed=2026-11-03",
-          "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS30&cosd=2016-01-01&coed=2026-11-03",
-          "https://fred.stlouisfed.org/graph/fredgraph.csv?id=T10YIE&cosd=2016-01-01&coed=2026-11-03",
-          "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFII10&cosd=2016-01-01&coed=2026-11-03",
-          "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFII30&cosd=2016-01-01&coed=2026-11-03"
+          "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2&cosd=2016-01-01&coed=2026-11-04",
+          "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2016-01-01&coed=2026-11-04",
+          "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS30&cosd=2016-01-01&coed=2026-11-04",
+          "https://fred.stlouisfed.org/graph/fredgraph.csv?id=T10YIE&cosd=2016-01-01&coed=2026-11-04",
+          "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFII10&cosd=2016-01-01&coed=2026-11-04",
+          "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFII30&cosd=2016-01-01&coed=2026-11-04"
         ],
         "seed_commit": "def6a4d5a9a75e1a123476750a80b9aa5c8576da",
         "overlap_revisions": 0,
         "seed_only_values": 0,
         "units": "percent per year; differences in percentage points",
         "file": "macro-rates.csv",
-        "sha256": "db655ebe72d68d77a8bf46ca4175650f535806c0e30c7fa17dcd582d5ee1f0bc",
-        "rows": 2827,
+        "sha256": "88d47aa6ca29555d7f157e7f4d8fd731ebb78d6d45d64b21c9ef6405551c1587",
+        "rows": 2828,
         "first_date": "2016-01-04",
-        "last_date": "2026-11-02"
+        "last_date": "2026-11-03"
       },
       "vix": {
         "source_url": "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv",
         "units": "VIX index points (30-day implied volatility, annualized %)",
         "file": "macro-vix.csv",
-        "sha256": "e1c16ab3ab72e0591a716900445373e902e84916ae0b6fdfdfcb3b3d258e794f",
-        "rows": 2758,
+        "sha256": "c078f6b73681f46823dd04c9454738243b3dfe6d081aadc771017ce6b96a042f",
+        "rows": 2759,
         "first_date": "2016-01-04",
-        "last_date": "2026-11-03"
+        "last_date": "2026-11-04"
       },
       "usdcad": {
-        "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/CAD%3DX?period1=1451606400&period2=1793750400&interval=1d",
+        "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/CAD%3DX?period1=1451606400&period2=1793836800&interval=1d",
         "symbol": "CAD=X",
         "missing_close_rows_dropped": 8,
         "units": "CAD per 1 USD; positive return = USD appreciation",
         "file": "macro-usdcad.csv",
-        "sha256": "c77c9b0ea06507647651eb8a34525b90ce939d0f614e3c7b6678331f5455b00b",
-        "rows": 2820,
+        "sha256": "f87ec595d4654f67898297dfaff436ce3a52303ae08bee291796f1e1452f4619",
+        "rows": 2821,
         "first_date": "2016-01-01",
-        "last_date": "2026-11-03"
+        "last_date": "2026-11-04"
       },
       "usdtwd": {
-        "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/TWD%3DX?period1=1451606400&period2=1793750400&interval=1d",
+        "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/TWD%3DX?period1=1451606400&period2=1793836800&interval=1d",
         "symbol": "TWD=X",
         "missing_close_rows_dropped": 8,
         "units": "TWD per 1 USD; positive return = USD appreciation",
         "file": "macro-usdtwd.csv",
-        "sha256": "80f88ac2e3d89d0d48ba2a93341a56f06362491ee7532bff46e8aef1c0e2ed3d",
-        "rows": 2820,
+        "sha256": "888802e20d50c5cd0afc7f9ff64a893c06dd4f74fb0f391df2bab9e0c55937d0",
+        "rows": 2821,
         "first_date": "2016-01-01",
-        "last_date": "2026-11-03"
+        "last_date": "2026-11-04"
       }
     }
   }
