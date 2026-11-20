@@ -91,8 +91,12 @@ def save_snapshot(directory, key, frame, metadata):
 
 def parse_fx(payload, symbol, limit):
     results = payload.get("chart", {}).get("result")
-    if not results or results[0].get("meta", {}).get("symbol") != symbol:
-        raise ValueError(f"Unexpected FX response: {symbol}")
+    if not results:
+        error = payload.get("chart", {}).get("error")
+        raise ValueError(f"Unexpected FX response: {symbol}; no data (Yahoo error: {error})")
+    actual_symbol = results[0].get("meta", {}).get("symbol")
+    if actual_symbol != symbol:
+        raise ValueError(f"Unexpected FX response: expected {symbol}, received {actual_symbol!r}")
     item = results[0]
     dates = pd.to_datetime(item["timestamp"], unit="s", utc=True).normalize().tz_localize(None)
     # Only close is consumed: Yahoo FX OHLC ranges may not enclose the reported close.
@@ -103,6 +107,20 @@ def parse_fx(payload, symbol, limit):
     frame.index.name = "date"
     frame.attrs["missing_close_rows_dropped"] = missing
     return frame
+
+
+def download_fx(url, symbol, limit):
+    # Yahoo can return HTTP 200 with an empty or invalid chart. Retry the whole
+    # download and validation, keeping the exact ticker and price checks intact.
+    for attempt in range(3):
+        try:
+            payload = json.loads(get_text(url, attempts=1, headers={"User-Agent": "Mozilla/5.0"}))
+            frame = parse_fx(payload, symbol, limit)
+            return validate_macro(frame, symbol)
+        except (RuntimeError, ValueError, KeyError, TypeError, IndexError) as exc:
+            if attempt == 2:
+                raise RuntimeError(f"FX download failed for {symbol} after 3 attempts: {exc}") from exc
+            time.sleep(2 ** attempt)
 
 
 def refresh_macro(directory, start, now, as_of=None):
@@ -135,7 +153,7 @@ def refresh_macro(directory, start, now, as_of=None):
     for key, symbol, currency in [("usdcad", "CAD=X", "CAD"), ("usdtwd", "TWD=X", "TWD")]:
         params = {"period1": int(pd.Timestamp(start, tz="UTC").timestamp()), "period2": int(limit.tz_localize("UTC").timestamp()), "interval": "1d"}
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{quote(symbol, safe='')}?{urlencode(params)}"
-        frame = parse_fx(json.loads(get_text(url, headers={"User-Agent": "Mozilla/5.0"})), symbol, limit)
+        frame = download_fx(url, symbol, limit)
         entries[key] = save_snapshot(directory, key, frame, {"source_url": url, "symbol": symbol, "missing_close_rows_dropped": frame.attrs["missing_close_rows_dropped"], "units": f"{currency} per 1 USD; positive return = USD appreciation"})
     for key in SOURCE_KEYS[:-1]:
         age = (limit - pd.Timestamp(entries[key]["last_date"])).days
