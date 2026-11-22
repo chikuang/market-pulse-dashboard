@@ -1,6 +1,6 @@
 # Market Pulse 大盤研究報告
 
-建立時間（UTC）：2026-11-21T13:31:52.787336+00:00
+建立時間（UTC）：2026-11-22T13:25:06.509419+00:00
 
 本報告以供應商可取得的已完成日線為準；各市場最新日期可能不同。價格指數不含股息，亦未換匯。
 
@@ -120,7 +120,7 @@
 
 - rates 最新來源日期：2026-11-19；percent per year; differences in percentage points。最新來源值不一定已供當天模型使用，對齊日期見 JSON。
 - vix 最新來源日期：2026-11-20；VIX index points (30-day implied volatility, annualized %)。最新來源值不一定已供當天模型使用，對齊日期見 JSON。
-- usdcad 最新來源日期：2026-11-20；CAD per 1 USD; positive return = USD appreciation。最新來源值不一定已供當天模型使用，對齊日期見 JSON。
+- usdcad 最新來源日期：2026-11-21；CAD per 1 USD; positive return = USD appreciation。最新來源值不一定已供當天模型使用，對齊日期見 JSON。
 - usdtwd 最新來源日期：2026-11-20；TWD per 1 USD; positive return = USD appreciation。最新來源值不一定已供當天模型使用，對齊日期見 JSON。
 
 [利率來源 repo](https://github.com/Leo-CZ/fed-rates-dashboard) · [FRED](https://fred.stlouisfed.org/) · [Cboe VIX 歷史資料](https://www.cboe.com/tradable_products/vix/vix_historical_data) · [ALFRED 修訂版本說明](https://alfred.stlouisfed.org/docs/alfred_capturing_data.pdf)
